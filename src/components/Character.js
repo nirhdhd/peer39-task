@@ -3,21 +3,26 @@ import { useParams } from "react-router-dom";
 import Loader from "./Loader";
 import { useNavigate } from "react-router-dom";
 
+import Dialog from "@mui/material/Dialog";
+import DialogContent from "@mui/material/DialogContent";
+import DialogContentText from "@mui/material/DialogContentText";
+import DialogTitle from "@mui/material/DialogTitle";
+
 var requestOptions = {
   method: "GET",
   redirect: "follow",
 };
 
-const Character = (props) => {
+const Character = () => {
+  const navigate = useNavigate();
+  const { s, e, c } = useParams();
+
   let [isLoaded, setIsLoaded] = useState(true);
   let [occupation, setoccupation] = useState("");
-  let component;
-  const navigate = useNavigate();
-
-  const { c } = useParams();
+  let [dialogOpen, setDialogOpen] = useState(false);
   const [charcterData, setCharcterData] = useState("");
+  let component;
 
-  ////////////////////
   useEffect(() => {
     async function fetchMyAPI() {
       let response = await fetch(
@@ -30,29 +35,47 @@ const Character = (props) => {
           return res.json();
         })
         .then((val) => {
-          setCharcterData(val[0]);
-          setoccupation(
-            val[0].occupation.map((item) => (
-              <div style={styles.occ}>{item}</div>
-            ))
-          );
+          if (val[0] !== undefined) {
+            setCharcterData(val[0]);
+            setoccupation(
+              val[0].occupation.map((item) => (
+                <div style={styles.occ}>{item}</div>
+              ))
+            );
+          } else {
+            setDialogOpen(true);
+            setTimeout(() => {
+              navigate("/main");
+            }, 2000);
+          }
         });
     }
     fetchMyAPI();
   }, []);
 
-  const goBack = () => {};
-  console.log(charcterData);
+  console.log("charcterData: ", charcterData);
 
-  if (charcterData == undefined) {
-    navigate(-1);
-  }
+  const handleClose = () => {
+    navigate("/");
+  };
 
   if (isLoaded) {
     component = <Loader />;
   } else {
     component = (
       <div style={styles.container}>
+        <Dialog
+          open={dialogOpen}
+          aria-labelledby="alert-dialog-title"
+          aria-describedby="alert-dialog-description"
+        >
+          <DialogTitle id="alert-dialog-title">{"server Error"}</DialogTitle>
+          <DialogContent>
+            <DialogContentText id="alert-dialog-description">
+              Sorry but there is no information about the player
+            </DialogContentText>
+          </DialogContent>
+        </Dialog>
         <span>{<img style={styles.img} src={charcterData.img} />}</span>
         <span>
           <div style={styles.mf}>
